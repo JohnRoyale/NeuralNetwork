@@ -3,14 +3,18 @@ import java.util.Random;
 
 public class Main {
 	static double[][][] weights;
-	static int[] size = { 2, 10, 1 };
+	static int[] size = { 3, 4,4, 1 };
 	static double[][] activation;
 	static int printD = 500;
-	static double learningRate = 0.005;
+	static double startingLearningRate = 0.8;
+	static double minLearningRate=0.05;
+	
 	static double maxError = 0.01;
+	static int maxEpoch=1000000;
+	static double bias = -1;
 
 	private static double sigmoid(double in) {
-		return (double) (1 / Math.exp(-in) + 1);
+		return (double) (1 /( Math.exp(-in) + 1));
 	}
 
 	private static double dSigmoid(double in) {
@@ -20,17 +24,19 @@ public class Main {
 
 	private static double[][] forwardProp() {
 
-		for (int i = 0; i < size.length - 1; i++) {
-			activation[i + 1] = new double[size[i + 1]];
-			for (int j = 0; j < weights[i].length; j++) {
-				for (int k = 0; k < weights[i][j].length; k++) {
-					activation[i + 1][j] += activation[i][k] * weights[i][j][k];
+		for (int k = 0; k < size.length - 1; k++) {
+			activation[k+1]=new double[size[k+1]];
+			for (int i = 0; i < weights[k].length; i++) {
+				activation[k+1][i]=0;
+				for (int j = 0; j < weights[k][i].length; j++) {
+					activation[k+1][i] += activation[k][j] *weights[k][i][j];
 				}
-				if (i < size.length - 2) {
-					activation[i + 1][j] = sigmoid(activation[i + 1][j]);
+				if (k < size.length - 2) {
+					activation[k+1][i]=sigmoid(activation[k+1][i]);
 				}
 			}
 		}
+		
 
 		return activation;
 	}
@@ -65,15 +71,10 @@ public class Main {
 		}
 
 		error[error.length - 1] = arraySub(expectedOutput, activation[activation.length - 1]);
-		double[][] localGradient = new double[error.length][];
-		for (int i = 0; i < error.length; i++) {
-			localGradient[i] = Arrays.copyOf(error[i], error[i].length);
-		}
 
 		for (int k = weights.length - 1; k > 0; k--) {
 			if (k > 0) {
 				error[k] = new double[error[k].length];
-				localGradient[k] = new double[localGradient[k].length];
 			}
 			for (int i = 0; i < delta[k + 1].length; i++) {
 				if (k != weights.length - 1) {
@@ -90,7 +91,7 @@ public class Main {
 		for (int k = weights.length - 1; k > 0; k--) {
 			for (int i = 0; i < weights[k].length; i++) {
 				for (int j = 0; j < weights[k][i].length; j++) {
-					weights[k][i][j] += learningRate * delta[k + 1][i] * activation[k][j];
+					weights[k][i][j] += startingLearningRate * delta[k + 1][i] * activation[k][j];
 				}
 			}
 		}
@@ -111,7 +112,7 @@ public class Main {
 	}
 
 	public static void main(String[] args) {
-		double[][] input = { { 0, 0 }, { 0, 1 }, { 1, 0 }, { 1, 1 } };
+		double[][] input = { { 0, 0, bias }, { 0, 1, bias }, { 1, 0, bias }, { 1, 1, bias } };
 		double[][] expectedOutput = { { 0 }, { 1 }, { 1 }, { 0 } };
 
 		weights = new double[size.length - 1][][];
@@ -140,29 +141,30 @@ public class Main {
 			for (int k = 0; k < input.length; k++) {
 				activation = new double[size.length][];
 				activation[0] = Arrays.copyOf(input[k], input[k].length);
-				activation = forwardProp();
+				forwardProp();
 				backProp(activation, expectedOutput[k]);
 				error = error(activation[activation.length - 1], expectedOutput[k]);
 				if (Math.floorMod(i, printD) == 0) {
 					System.out.print("Pattern " + k + ": " + activation[activation.length - 1][0]);
 					System.out.println(" Squared Error: " + error);
 				}
-				if (error > maxError && i < 20000)
+				if (error > maxError && i < maxEpoch)
 					flag = true;
 			}
 			if (i % printD == 0)
 				System.out.println();
+			startingLearningRate=Math.max(startingLearningRate*0.99999, minLearningRate);
 		}
 
 		System.out.println("Epoch " + i);
 		for (int k = 0; k < input.length; k++) {
 			activation = new double[size.length][];
 			activation[0] = Arrays.copyOf(input[k], input[k].length);
-			activation = forwardProp();
+			forwardProp();
 			error = error(activation[activation.length - 1], expectedOutput[k]);
 			System.out.print("Pattern " + k + ": " + activation[activation.length - 1][0]);
 			System.out.println(" Squared Error: " + error);
-
+			
 		}
 	}
 
