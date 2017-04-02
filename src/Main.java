@@ -3,14 +3,16 @@ import java.util.Random;
 
 public class Main {
 	static double[][][] weights;
-	static int[] size = { 3, 4,4, 1 };
+	static double[][][] dWeights;
+	static int[] size = { 3,4, 1 };
 	static double[][] activation;
-	static int printD = 500;
-	static double startingLearningRate = 0.8;
-	static double minLearningRate=0.05;
-	
+	static double startingLearningRate = 0.1;
+	static double minLearningRate=0.1;
+	static double degration = 0.9;
+	static double momentum =0.3;
 	static double maxError = 0.01;
-	static int maxEpoch=1000000;
+	static int maxEpoch=100000000;
+	static int printD = Math.max(maxEpoch/10000,10);
 	static double bias = -1;
 
 	private static double sigmoid(double in) {
@@ -39,14 +41,6 @@ public class Main {
 		
 
 		return activation;
-	}
-
-	private static void arrayAdd(double[] A, double[] B) {
-		if (A.length != B.length)
-			System.err.print("Arrays need to be off equals size to substract");
-
-		for (int i = 0; i < A.length; i++)
-			A[i] = A[i] + B[i];
 	}
 
 	private static double[] arraySub(double[] A, double[] B) {
@@ -91,6 +85,8 @@ public class Main {
 		for (int k = weights.length - 1; k > 0; k--) {
 			for (int i = 0; i < weights[k].length; i++) {
 				for (int j = 0; j < weights[k][i].length; j++) {
+					dWeights[k][i][j] =startingLearningRate * delta[k + 1][i] * activation[k][j]+
+							momentum*dWeights[k][i][j];
 					weights[k][i][j] += startingLearningRate * delta[k + 1][i] * activation[k][j];
 				}
 			}
@@ -116,9 +112,10 @@ public class Main {
 		double[][] expectedOutput = { { 0 }, { 1 }, { 1 }, { 0 } };
 
 		weights = new double[size.length - 1][][];
-
+		dWeights=new double [size.length -1][][];
 		for (int i = 0; i < weights.length; i++) {
 			weights[i] = new double[size[i + 1]][size[i]];
+			dWeights[i] = new double[size[i + 1]][size[i]];
 		}
 
 		Random r = new Random(System.currentTimeMillis());
@@ -153,7 +150,7 @@ public class Main {
 			}
 			if (i % printD == 0)
 				System.out.println();
-			startingLearningRate=Math.max(startingLearningRate*0.99999, minLearningRate);
+			startingLearningRate=Math.max(startingLearningRate*degration, minLearningRate);
 		}
 
 		System.out.println("Epoch " + i);
