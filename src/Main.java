@@ -7,9 +7,9 @@ public class Main {
 	static int[] size = { 3,4, 1 };
 	static double[][] activation;
 	static double startingLearningRate = 0.1;
-	static double minLearningRate=0.1;
+	static double minLearningRate=0.05;
 	static double degration = 0.9;
-	static double momentum =0.3;
+	static double momentum =0.1;
 	static double maxError = 0.01;
 	static int maxEpoch=100000000;
 	static int printD = Math.max(maxEpoch/10000,10);
@@ -87,7 +87,7 @@ public class Main {
 				for (int j = 0; j < weights[k][i].length; j++) {
 					dWeights[k][i][j] =startingLearningRate * delta[k + 1][i] * activation[k][j]+
 							momentum*dWeights[k][i][j];
-					weights[k][i][j] += startingLearningRate * delta[k + 1][i] * activation[k][j];
+					weights[k][i][j] += dWeights[k][i][j];
 				}
 			}
 		}
@@ -141,7 +141,7 @@ public class Main {
 				forwardProp();
 				backProp(activation, expectedOutput[k]);
 				error = error(activation[activation.length - 1], expectedOutput[k]);
-				if (Math.floorMod(i, printD) == 0) {
+				if (i % printD == 0) {
 					System.out.print("Pattern " + k + ": " + activation[activation.length - 1][0]);
 					System.out.println(" Squared Error: " + error);
 				}
